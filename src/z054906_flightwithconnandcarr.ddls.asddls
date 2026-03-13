@@ -2,20 +2,27 @@
 @AccessControl.authorizationCheck: #NOT_REQUIRED
 @EndUserText.label: 'Flight with Connection and Carrier'
 define view entity Z054906_FlightWithConnAndCarr
-  as select from Z054906_Flight           as f
-  /* Inner Joins */
-    inner join   Z054906_FlightConnection as fc on  f.CarrierId    = fc.CarrierId
-                                                and f.ConnectionId = fc.ConnectionId
-    inner join   Z054906_Carrier          as c  on f.CarrierId = c.CarrierId
+  with parameters
+    P_CarrierId : /dmo/carrier_id,
+    @Environment.systemField: #SYSTEM_DATE
+    P_Deadline  : /dmo/flight_date
+  as select from Z054906_Flight
+  association [1..1] to Z054906_FlightConnection as _Connection on  $projection.CarrierId    = _Connection.CarrierId
+                                                                and $projection.ConnectionId = _Connection.ConnectionId
+  association [1..1] to Z054906_Carrier          as _Carrier    on  $projection.CarrierId = _Carrier.CarrierId
+  association [0..*] to /dmo/booking             as _Bookings   on  $projection.CarrierId    = _Bookings.carrier_id
+                                                                and $projection.ConnectionId = _Bookings.connection_id
+                                                                and $projection.FlightDate   = _Bookings.flight_date
 {
-      /* Projektion */
-  key f.CarrierId,
-  key f.ConnectionId,
-  key f.FlightDate,
-      c.Name,
-      fc.AirportFromId,
-      fc.AirportToId
+  key CarrierId,
+  key ConnectionId,
+  key FlightDate,
+
+      /* Associations */
+      _Carrier,
+      _Connection,
+      _Bookings
 }
 where
-      f.CarrierId    = 'LH'
-  and f.ConnectionId = '0400' // Selektion
+      CarrierId  = $parameters.P_CarrierId
+  and FlightDate > $parameters.P_Deadline // Selektion

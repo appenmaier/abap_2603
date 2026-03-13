@@ -9,12 +9,10 @@ ENDCLASS.
 
 CLASS zcl_054906_demo_01 IMPLEMENTATION.
   METHOD if_oo_adt_classrun~main.
-    DATA travels TYPE TABLE OF /DMO/I_Travel_D.
+    SELECT FROM Z054906_FlightWithCarrierName( p_carrierid = 'LH' )
+      FIELDS CarrierId, ConnectionId, \_Connection-AirportFromId, \_Connection-AirportToId
+      INTO TABLE @DATA(flights).
 
-    SELECT FROM /DMO/I_Travel_D
-      FIELDS *
-      INTO TABLE @travels.
-
-    out->write( travels ).
+    out->write( flights ).
   ENDMETHOD.
 ENDCLASS.
